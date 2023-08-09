@@ -14,7 +14,8 @@ import time
 import os
 import tiktoken
 
-os.environ["OPENAI_API_KEY"] = "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"
+#os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 #os.environ["OPENAI_API_KEY"] = "empty"
 #os.environ["OPENAI_API_BASE"] = "http://192.168.1.103:8000/v1"
 
@@ -79,7 +80,7 @@ task_specifier_prompt = """这是一个{assistant_role_name}会帮助{user_role_
 task_specifier_template = HumanMessagePromptTemplate.from_template(
     template=task_specifier_prompt
 )
-task_specify_agent = CAMELAgent(task_specifier_sys_msg, ChatOpenAI(temperature=1.0))
+task_specify_agent = CAMELAgent(task_specifier_sys_msg, ChatOpenAI(temperature=1.0,model_name='gpt-3.5-turbo'))
 task_specifier_msg = task_specifier_template.format_messages(
     assistant_role_name=assistant_role_name,
     user_role_name=user_role_name,
@@ -160,8 +161,8 @@ def get_sys_msgs(assistant_role_name: str, user_role_name: str, task: str):
 assistant_sys_msg, user_sys_msg = get_sys_msgs(
     assistant_role_name, user_role_name, specified_task
 )
-assistant_agent = CAMELAgent(assistant_sys_msg, ChatOpenAI(temperature=0.2))
-user_agent = CAMELAgent(user_sys_msg, ChatOpenAI(temperature=0.2))
+assistant_agent = CAMELAgent(assistant_sys_msg, ChatOpenAI(temperature=0.2,model_name='gpt-3.5-turbo'))
+user_agent = CAMELAgent(user_sys_msg, ChatOpenAI(temperature=0.2,model_name='gpt-3.5-turbo'))
 
 # Reset agents
 assistant_agent.reset()

@@ -1,6 +1,7 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import sys
+from langchain.vectorstores import FAISS
 
 
 model = SentenceTransformer('intfloat/multilingual-e5-large')
@@ -12,7 +13,7 @@ def add_emb(content,emb,outp):
     outp.write(','.join([str(e) for e in emb]) + '\n')
 
 def get_emb(content):
-    return model.encode(['passage:'+content],normalize_embeddings=True)[0]
+    return model.encode(['passage:'+content],normalize_embeddings=False)[0]
 
     
 with open(sys.argv[1]) as fp,open(sys.argv[2],'a') as op:
