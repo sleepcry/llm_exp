@@ -19,4 +19,20 @@ notes:
 ## demonstrate query based paragraph extraction
 `python qa.py [embedding path, *.txt]`
 
+## 心理学助教  
+
+### 给助教添加相关文档并开始聊天  
+`python langchain_qa.py -d [doc file] -v [store file]`
+
+### 调用之前的文档直接开始聊天
+`python langchain_qa.py -v [store file]`
+
+### 已添加文档  
+store文件名：psycho.vecstore
+文档列表：  
+1. 普通心理学第四版
+2. 实验心理学
+3. 动机与人格
+4. 社会心理学
+5. 心理学导论
 
