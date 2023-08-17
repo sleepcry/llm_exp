@@ -1,1 +1,4 @@
 corpus/.chatgpt
+*.wav
+*.pyc
+exp/

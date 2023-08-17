@@ -66,8 +66,8 @@ PROMPT = PromptTemplate(
     output_parser=parser2
 )
 
-prompt_template = """ 评估问题是否为“心理学”相关问题，回答必须以“YES”或者“NO”开头，并说明原因。
-如果该问题是“心理学”相关问题，回答必须以“YES”开头，否则，以“NO”开头。用中文作答！
+prompt_template = """ 评估问题是否心理学相关问题，回答必须以“YES”或者“NO”开头，并说明原因。
+如果该问题是心理学相关问题，回答必须以“YES”开头，否则，以“NO”开头。用中文作答！
 比如：
 Example #1
 
@@ -79,30 +79,69 @@ Question: 什么是人脑发育的关键期和可塑性？
 Answer: YES，该问题是心理学相关问题。
 下面为正式问题：
 Question: {question}
-Answer: 
+Answer:
+"""
+prompt_template = """评估一个分数"Score"来代表"Question"与心理学的的相关度。
+--------
+如何评分：
+- Score值越大表示"Question"与心理学的的相关度越高。
+- 0表示"Question"与心理学完全不相关。
+- 100表示"Question"与心理学高度相关。
+- 认真评分，这很重要。
+--------
+
+如果Score大于50，必须以“YES”开始作答。如果Score小于或等于50，必须以“NO”开始作答。不能以其他任何字符开始作答。
+回答中必须包含Score，用中文作答并讲出具体理由！
+--------
+Question: {question}
+Answer:
 """
 CLASSIFIER_PROMPT = PromptTemplate(
     template=prompt_template,
     input_variables=["question"]
 )
 
-prompt_template = """阅读“Context”中描述的QA上下文，评估“Question”是否为一个完整句子。如果是，不做任何改动，否则，基于上下文补全句子并返回，并详细说明你的判断的理由。
+prompt_template = """评估<<<Question>>>是否为一个完整句子。如果是，不做任何改动，返回原始句子并说明理由。否则，结合<<<Context>>>描述的问答语境补全句子，返回补全后的句子并说明理由。
+
+不能改变句子原本的意思! 
+不能扩充句子的意思！
+
 请按照下面格式回答：
-Final Question: [补全后的问题]
+Final Question: [最终的句子]
 Reason: [判断的理由]
 
+<<<Context>>>:
+--------
+{context}
+--------
+<<<Question>>>:{question}
+"""
+
+"""prompt_template = Find the clear entity inside the question "Qeustion". 
+If you're not sure about the entity or the entity is not clear enough, find the entity inside "Context" from end to start, and rewrite the question with the found entity.
+DO NOT add anything to change the original meaning of the question.
+
+请按照下面格式回答：
+--------
+Final Question: [final question]
+Entity: [entity]
+--------
+
+开始吧！
 Context:
 --------
 {context}
 --------
 Question:{question}
 """
-prompt_template = """Find the entity inside the question "Qeustion", if you're not sure about the entity, find the entity inside "Context", and rewrite the question with this entity.
-DO NOT add anything to change the original meaning of the question.
+"""prompt_template = Try to answer "Question".
+If you are not very confident about your answer, DO NOT make up any answer, find the entity inside "Context" from end to start, and rewrite the "Question" with the found entity.
+You will never change the original meaning of the question.
+You will not expand the original meaning of the question.
 请按照下面格式回答：
 --------
-Final Question: [rewritten question]
-Entity: [entity]
+Answer: [your answer]
+Final Question: [final question]
 --------
 
 开始吧！

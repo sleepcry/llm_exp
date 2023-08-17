@@ -1,5 +1,5 @@
 import langchain
-langchain.verbose = True
+#langchain.verbose = True
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.document_loaders import TextLoader
 from simple_splitter import EmptyLineSplitter
@@ -12,7 +12,7 @@ import sys
 import argparse
 import pathlib
 import time
-from langchain.chains.combine_documents.map_rerank import MapRerankDocumentsChain
+import maprerank
 from langchain.chains.question_answering import map_rerank_prompt
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
 from langchain.docstore.document import Document
@@ -61,40 +61,19 @@ if args.doc:
     print('save new doc store to file:'+vec_file)
     vectorstore.save_local(vec_file)
 
-class MyMapRerankDocumentsChain(MapRerankDocumentsChain):
-
-    def _process_results(
-        self,
-        docs: List[Document],
-        results: Sequence[Union[str, List[str], Dict[str, str]]],
-    ) -> Tuple[str, dict]:
-        print(results)
-        typed_results = cast(List[dict], results)
-        sorted_res = sorted(
-            zip(typed_results, docs), key=lambda x: -int(x[0][self.rank_key])
-        )   
-        output, document = sorted_res[0]
-        extra_info = {}
-        if self.metadata_keys is not None:
-            for key in self.metadata_keys:
-                extra_info[key] = document.metadata[key]
-        if self.return_intermediate_steps:
-            extra_info["intermediate_steps"] = results
-        output["_doc_"] = document.page_content
-        output["_doc_metadata_"] = document.metadata
-        return output, extra_info
 
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 # for complate question 
 memory = ["","","","","",""]
 def add_memory(question,answer):
-    for i in range(5):
-        memory[i] = memory[i+1]
-    memory[-1] = "question:" + question
+    for i in range(4):
+        memory[i] = memory[i+2]
+    memory[-2] = "问:"+question
+    memory[-1] = "答:"+answer
 
 parser1 = RegexParser(
-    regex=r"Question: (.*?)\n+Entity:(.*)",
-    output_keys=["final_q",'reason'],
+    regex=r"Final Question: (.*?)\n+Reason:(.*)",
+    output_keys=['final_q','reason'],
 )
 complete_llm_chain = LLMChain(
         llm=llm,
@@ -117,7 +96,7 @@ direct_llm_chain = LLMChain(
         llm=llm,
         prompt=PromptTemplate(input_variables=["question"],template="请用心理学知识回答该问题：{question}")
     )
-combine_documents_chain = MyMapRerankDocumentsChain(
+combine_documents_chain = maprerank.MyMapRerankDocumentsChain(
         llm_chain=llm_chain,
         rank_key="score",
         answer_key="answer",
@@ -132,8 +111,9 @@ while 1:
         break
     res = complete_llm_chain({'context':'\n'.join(memory),'question':question})
     question = res['text']['final_q']
-    print('问题补全结果:',question,'Entity:',res['text']['reason'])
+    print('问题补全结果:',question)
     res = classifier_llm_chain(question)
+    print(res)
     if res['text'].startswith('NO'):
         print(res['text'][3:])
         continue
