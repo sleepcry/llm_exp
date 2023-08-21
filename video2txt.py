@@ -1,5 +1,4 @@
 import moviepy.editor as mp
-from paddlespeech.cli.asr.infer import ASRExecutor
 from langchain.text_splitter import SpacyTextSplitter
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.summarize import load_summarize_chain
@@ -17,6 +16,7 @@ import maprerank
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from langchain.chains.llm import LLMChain
+from speechbrain.pretrained import EncoderDecoderASR
 
 os.environ["OPENAI_API_KEY"] = open('corpus/.chatgpt').read().strip()
 os.environ["TOKENIZERS_PARALLELISM"]="false"
@@ -29,30 +29,32 @@ video = mp.VideoFileClip(sys.argv[1])
 audio_file = video.audio
 audio_file.write_audiofile(tmp_file)
 print("音频文件提取完成:",tmp_file)
-sound_file = AudioSegment.from_wav("out.wav")
+#sound_file = AudioSegment.from_wav("out.wav")
+sound_file = AudioSegment.from_wav(tmp_file)
 print("切割音频文件...")
-audio_chunks = split_on_silence(sound_file, min_silence_len=500, silence_thresh=-40 )
+audio_chunks = split_on_silence(sound_file, min_silence_len=1000,silence_thresh=-50)
 
 print("切割完成，chunk数量:",len(audio_chunks),",音频转文字...")
-asr = ASRExecutor()
+asr_model = EncoderDecoderASR.from_hparams(source="speechbrain/asr-transformer-aishell", savedir="pretrained_models/asr-transformer-aishell")
 text = ""
-"""
 for i, chunk in enumerate(audio_chunks):
-   out_file = "chunk{0}.wav".format(i)
+   out_file = "corpus/tmp/chunk{0}.wav".format(i)
    print("exporting", out_file)
    chunk.export(out_file, format="wav")
-   text += asr(audio_file=out_file)
-   """
-loader = TextLoader("corpus/luoxiang.txt")
-text = loader.load()
+   t = asr_model.transcribe_file(out_file)
+   text += t
+   print(t)
+#loader = TextLoader("corpus/luoxiang.txt")
+#text = loader.load()
 # Print the text
 print("\n音频对应的文字是: \n")
 print(text,'\n\n')
 print("开始生成文字摘要...\n")
+sys.exit()
 
 #text_splitter = SpacyTextSplitter(chunk_size=1000)
 text_splitter = EmptyLineSplitter()
-docs = text_splitter.split_documents(text)
+docs = text_splitter.split_documents([Document(page_content=text)])
 llm = ChatOpenAI(temperature=0.2, model_name="gpt-3.5-turbo-16k")
 chain = load_summarize_chain(llm, chain_type="stuff")
 #chain = load_summarize_chain(llm, chain_type="map_reduce")

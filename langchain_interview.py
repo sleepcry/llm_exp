@@ -100,10 +100,10 @@ another_candidate = LLMChain(
         prompt=interview_prompts.ANOTHER_CANDIDATE_PROMPT
     )
 
-company = '心理健康诊所'
-job = '心理咨询师'
-#company = '互联网公司'
-#job = 'JAVA后端程序员'
+#company = '心理健康诊所'
+#job = '心理咨询师'
+company = '互联网公司'
+job = 'JAVA后端程序员'
 interviewer = InterViewer(interview_prompts.INTERVIEWER_PROMPT,company,job)
 reviewer = ReViewer(interview_prompts.REVIEWER_PROMPT,company,job)
 print('面试官：你好，感谢你前来应聘"%s"岗位，我是这家%s的面试官，下面我们开始面试！\n'%(job,company))

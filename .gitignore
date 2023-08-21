@@ -2,3 +2,5 @@ corpus/.chatgpt
 *.wav
 *.pyc
 exp/
+pretrained_models/
+*.wav
